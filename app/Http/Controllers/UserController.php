@@ -18,14 +18,7 @@ class UserController extends Controller
     {
         $users = User::query()
             ->with('team', 'skills', 'profile.profession')
-            ->when(request('team'), function ($query, $team) {
-                if ($team === 'with_team') {
-                    $query->has('team');
-                } elseif ($team === 'without_team') {
-                    $query->doesntHave('team');
-                }
-            })
-            ->filterBy($userFilter, request()->only(['state', 'role', 'search', 'skills', 'from', 'to']))
+            ->filterBy($userFilter, request()->only(['state', 'role', 'search', 'skills', 'from', 'to', 'team']))
             ->orderBy('created_at', 'DESC')
             ->paginate();
 

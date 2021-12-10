@@ -221,6 +221,48 @@ class FilterUsersTest extends TestCase
             ->notContains($backendDev)
             ->notContains($designer);
     }
+
+    /** @test */
+    public function filter_users_with_team()
+    {
+        $team = factory(Team::class)->create([ 'id' => '1', 'name'=> 'INGENIERO']);
+        $withTeamUser = factory(User::class)->create(['team_id' => $team->id]);
+        $withoutTeamUser = factory(User::class)->create();
+
+        $response = $this->get('usuarios?team=with_team');
+
+        $response->assertViewCollection('users')
+            ->contains($withTeamUser)
+            ->notContains($withoutTeamUser);
+    }
+    /** @test */
+    public function filter_users_without_team()
+    {
+        $team = factory(Team::class)->create([ 'id' => '1', 'name'=> 'INGENIERO']);
+        $withTeamUser = factory(User::class)->create(['team_id' => $team->id]);
+        $withoutTeamUser = factory(User::class)->create();
+
+        $response = $this->get('usuarios?team=without_team');
+
+        $response->assertViewCollection('users')
+            ->contains($withoutTeamUser)
+            ->notContains($withTeamUser);
+    }
+
+    /** @test */
+    public function filter_users_with_and_without_team()
+    {
+        $team = factory(Team::class)->create([ 'id' => '1', 'name'=> 'INGENIERO']);
+        $withTeamUser = factory(User::class)->create(['team_id' => $team->id]);
+        $withoutTeamUser = factory(User::class)->create();
+
+        $response = $this->get('usuarios?team=all');
+
+        $response->assertViewCollection('users')
+            ->contains($withTeamUser)
+            ->contains($withoutTeamUser);
+    }
+
 }
 
 

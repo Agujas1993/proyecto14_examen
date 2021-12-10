@@ -11,6 +11,7 @@ class UserFilter extends QueryFilter
     public function rules(): array
     {
         return [
+            'team' => "in:with_team,without_team,''",
             'search' => 'filled',
             'state' => 'in:active,inactive',
             'role' => 'in:user,admin',
@@ -30,6 +31,16 @@ class UserFilter extends QueryFilter
                 });
         });
 
+    }
+
+    public function team($query, $team)
+    {
+        if ($team === 'with_team') {
+            $query->has('team');
+        } elseif ($team === 'without_team') {
+            $query->doesntHave('team');
+        }
+        return $query;
     }
 
     public function state($query, $state)
