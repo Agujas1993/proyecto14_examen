@@ -3,6 +3,7 @@
 namespace Tests\Feature\Admin;
 
 use App\Skill;
+use App\Team;
 use App\User;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -155,8 +156,71 @@ class FilterUsersTest extends TestCase
             ->notContains($newUser);
     }
 
+    /** @test */
+    public function filter_users_by_state_search_role()
+    {
+        $jose = factory(User::class)->create([
+            'first_name' => 'Jose',
+            'role' => 'user'
+        ]);
+        $pepe = factory(User::class)->state('inactive')->create([
+            'first_name' => 'Pepe',
+            'role' => 'admin'
+        ]);
+        $mario = factory(User::class)->create([
+            'first_name' => 'Mario',
+            'role' => 'user'
+        ]);
 
+        $luis = factory(User::class)->state('inactive')->create([
+            'first_name' => 'Luis',
+            'role' => 'user'
+        ]);
 
+        $response = $this->get('usuarios?state=active&search=Jo&role=user');
+
+        $response->assertViewCollection('users')
+            ->contains($jose)
+            ->notContains($pepe)
+            ->notContains($mario)
+            ->notContains($luis);
+    }
+
+    /** @test */
+    public function filter_users_by_skill_and_team()
+    {
+        $team = factory(Team::class)->create();
+        $php = factory(Skill::class)->create(['name' => 'php']);
+        $css = factory(Skill::class)->create(['name' => 'css']);
+        $html = factory(Skill::class)->create(['name' => 'html']);
+
+        $backendDev = factory(User::class)->create();
+        $backendDev->skills()->attach([$php->id, $css->id]);
+
+        $fullStackDev = factory(User::class)->create([
+            'team_id' => $team->id,
+        ]);
+        $fullStackDev->skills()->attach([$php->id, $css->id]);
+
+        $frontendDev = factory(User::class)->create([
+            'team_id' => $team->id,
+        ]);
+
+        $designer = factory(User::class)->create([
+            'team_id' => $team->id
+        ]);
+        $designer->skills()->attach([$css->id, $html->id]);
+
+        $response = $this->get("usuarios?skills[0]={$php->id}&skills[1]={$css->id}&team=with_team");
+
+        $response->assertStatus(200);
+
+        $response->assertViewCollection('users')
+            ->contains($fullStackDev)
+            ->notContains($frontendDev)
+            ->notContains($backendDev)
+            ->notContains($designer);
+    }
 }
 
 
