@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Admin;
 
+use App\Profession;
 use App\User;
 use App\UserProfile;
 use Tests\TestCase;
@@ -62,5 +63,36 @@ class DeleteUsersTest extends TestCase
             'id' => $user->id,
             'deleted_at' => null,
         ]);
+    }
+
+    /** @test */
+    public function it_completely_restores_a_user()
+    {
+        $user = factory(User::class)->create([
+            'first_name' => 'Joel',
+            'deleted_at' => now(),
+        ]);
+
+        $design = factory(Profession::class)->create([
+            'title' => 'Diseñador Web',
+        ]);
+
+        $user->profile()->update([
+            'profession_id' => $design->id,
+            'deleted_at' => now(),
+        ]);
+
+        $user->restore('usuarios/' . $user->id);
+        $user->profile()->restore();
+
+
+        $this->assertDatabaseHas('users', [
+            'first_name' => $user->first_name,
+            'deleted_at' => null,
+        ])
+            ->assertDatabaseHas('user_profiles', [
+                'profession_id' => $design->id,
+                'deleted_at' => null,
+            ]);
     }
 }

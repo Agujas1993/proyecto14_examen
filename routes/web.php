@@ -14,7 +14,7 @@ Route::get('usuarios/{user}', 'UserController@show')
     ->where('id', '[0-9]+')->name('users.show');
 Route::delete('usuarios/{id}', 'UserController@destroy')->name('users.destroy');
 Route::patch('usuarios/{user}/papelera', 'UserController@trash')->name('users.trash');
-
+Route::post('usuarios/{id}', 'UserController@restore')->name('users.restore');
 
 Route::get('editar-perfil', 'ProfileController@edit');
 Route::put('editar-perfil', 'ProfileController@update');

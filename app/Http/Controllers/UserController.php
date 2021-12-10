@@ -39,9 +39,18 @@ class UserController extends Controller
         ]);
     }
 
+    public function restore($id)
+    {
+        $user = User::onlyTrashed()->where('id', $id)->firstOrFail();
+        $user->profile()->restore();
+        $user->restore();
+
+        return redirect()->route('users.trashed');
+    }
+
     public function trashed()
     {
-        $users = User::onlyTrashed()->paginate();
+        $users = User::onlyTrashed()->with('skills', 'profile', 'team')->paginate();//Añadido el with para problema n+1
 
         return view('users.index', [
             'users' => $users,
