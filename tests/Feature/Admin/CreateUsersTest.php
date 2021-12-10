@@ -123,6 +123,40 @@ class CreateUsersTest extends TestCase
     }
 
     /** @test */
+    public function the_twitter_field_must_be_present()
+    {
+        $this->handleValidationExceptions();
+        $this->post('usuarios', $this->withData([
+            'twitter' => 'https://twitter.com/pepe'
+        ]))->assertRedirect('usuarios');
+
+        $this->assertCredentials([
+            'first_name' => 'Pepe',
+            'email' => 'pepe@mail.es',
+            'password' => '123456'
+        ]);
+
+        $this->assertDatabaseHas('user_profiles', [
+            'bio' => 'Programador de Laravel y Vue.js',
+            'twitter' => 'https://twitter.com/pepe',
+            'user_id' => User::findByEmail('pepe@mail.es')->id,
+        ]);
+    }
+
+    /** @test */
+    public function the_twitter_field_must_be_a_url()
+    {
+        $this->handleValidationExceptions();
+
+        $this->from('usuarios/crear')
+            ->post('usuarios', [
+                'name' => 'Pepe',
+                'twitter' => 'url_no_valida',
+                'password' => '123456'
+            ])->assertSessionHasErrors('twitter');
+    }
+
+    /** @test */
     public function the_first_name_is_required()
     {
         $this->handleValidationExceptions();
@@ -313,6 +347,19 @@ class CreateUsersTest extends TestCase
         $this->post('usuarios', $this->withData([
             'state' => null
         ]))->assertSessionHasErrors(['state']);
+
+        $this->assertDatabaseEmpty('users');
+    }
+
+    /** @test */
+    public function the_bio_field_is_required()
+    {
+        $this->handleValidationExceptions();
+
+        $this->from('usuarios/crear')
+            ->post('usuarios', $this->withData([
+                'bio' => ''
+            ]))->assertSessionHasErrors(['bio' => 'El campo biografía es obligatorio']);
 
         $this->assertDatabaseEmpty('users');
     }

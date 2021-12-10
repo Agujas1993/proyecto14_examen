@@ -260,4 +260,83 @@ class UpdateUsersTest extends TestCase
 
         $this->assertDatabaseMissing('users', ['first_name' => 'Pepe']);
     }
+
+    /** @test */
+    public function the_bio_field_is_required()
+    {
+        $this->handleValidationExceptions();
+
+        $user = factory(User::class)->create();
+
+        $this->from('usuarios/' . $user->id . '/editar')
+            ->put('usuarios/' . $user->id, $this->withData([
+                'bio' => '',
+            ]))->assertRedirect('usuarios/' . $user->id . '/editar')
+            ->assertSessionHasErrors(['bio']);
+
+        $this->assertDatabaseMissing('user_profiles', ['bio' => 'Programador de Laravel y Vue.js']);
+    }
+
+    /** @test */
+    public function the_twitter_field_is_optional()
+    {
+        $user = factory(User::class)->create();
+
+        $this->from('usuarios/' . $user->id . '/editar')
+            ->put('usuarios/' . $user->id, $this->withData([
+            'twitter' => null
+        ]))->assertRedirect('usuarios/' . $user->id);
+
+        $this->assertCredentials([
+            'first_name' => 'Pepe',
+            'email' => 'pepe@mail.es',
+            'password' => '123456'
+        ]);
+
+        $this->assertDatabaseHas('user_profiles', [
+            'bio' => 'Programador de Laravel y Vue.js',
+            'twitter' => null,
+            'user_id' => User::findByEmail('pepe@mail.es')->id,
+        ]);
+    }
+
+    /** @test */
+    public function the_twitter_field_must_be_present()
+    {
+        $this->handleValidationExceptions();
+
+        $user = factory(User::class)->create();
+
+        $this->from('usuarios/' . $user->id . '/editar')
+        ->put('usuarios/' . $user->id, $this->withData([
+            'twitter' => 'https://twitter.com/pepe'
+        ]))->assertRedirect('usuarios/' . $user->id);
+
+        $this->assertCredentials([
+            'first_name' => 'Pepe',
+            'email' => 'pepe@mail.es',
+            'password' => '123456'
+        ]);
+
+        $this->assertDatabaseHas('user_profiles', [
+            'bio' => 'Programador de Laravel y Vue.js',
+            'twitter' => 'https://twitter.com/pepe',
+            'user_id' => User::findByEmail('pepe@mail.es')->id,
+        ]);
+    }
+
+    /** @test */
+    public function the_twitter_field_must_be_a_url()
+    {
+        $this->handleValidationExceptions();
+
+        $user = factory(User::class)->create();
+
+        $this->from('usuarios/' . $user->id . '/editar')
+            ->put('usuarios/' . $user->id, $this->withData([
+                'twitter' => 'url_no_valida',
+            ]))->assertRedirect('usuarios/' . $user->id . '/editar')
+            ->assertSessionHasErrors('twitter');
+        $this->assertDatabaseMissing('user_profiles', ['twitter' => 'url_no_valida']);
+    }
 }

@@ -60,6 +60,7 @@ class CreateUserRequest extends FormRequest
             'email.required' => 'El campo email es obligatorio',
             'password.required' => 'El campo contraseña es obligatorio',
             'email.unique' => 'Ese email ya existe en la BD',
+            'bio.required' => 'El campo biografía es obligatorio',
         ];
     }
 
